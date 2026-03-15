@@ -1,102 +1,63 @@
 # LLM Data Copilot
 
-LLM Data Copilot is a prototype AI agent that translates natural-language business questions into SQL queries.
+A prototype **RAG-based** application that converts natural-language questions into SQL. It uses semantic search over example queries and an LLM to generate SQL aligned with the retrieved patterns—suitable for analytics and reporting use cases where non-SQL users need to query structured data.
 
-The project was built to explore how large language models can improve access to structured data in business environments, especially for users who need insights from a database but do not know SQL.
+## What it does
 
-## Problem Statement
+1. **You ask** a question in plain language (e.g. *"What are the total taxable values by client for 2025?"*).
+2. **The system** finds similar example questions and their SQL in a vector store (FAISS).
+3. **An LLM** produces a SQL query grounded in those examples and in the described schema.
+4. **You get** a suggested SQL query (read-only; the app does not execute it).
 
-In many organizations, non-technical users depend on data professionals to write SQL for ad-hoc analytical requests. This creates bottlenecks, slows down decision-making, and limits access to data.
-
-This project addresses that problem by using a retrieval-grounded LLM workflow capable of converting business questions into SQL queries aligned with real query examples and schema context.
-
-## Solution Approach
-
-The current prototype follows a Retrieval-Augmented Generation approach:
-
-1. The user asks a question in natural language.
-2. The system retrieves semantically similar examples from a vector store.
-3. The LLM receives the retrieved context.
-4. The model generates a SQL query grounded in the retrieved examples.
-
-A key design decision in this project is grounding before generation. Instead of relying only on the language model's prior knowledge, the system first retrieves relevant examples to reduce hallucinations and improve schema adherence.
-
-## Current Repository Structure
+## Repository structure
 
 ```text
 llm-data-copilot/
-├── app/                               # Reserved interface layer
-├── data_dictionary/                   # Schema and business-context assets
-├── prompts/                           # Prompt-related assets
-├── queries/                           # SQL examples and NL-to-SQL examples
-├── vectorstore/                       # Local FAISS index generated from examples
-├── create_embedding.py                # Creates embeddings from a SQL asset
-├── create_embedding_from_examples.py  # Creates embeddings from NL-to-SQL examples
-├── fix_multiple_queries.py            # Utility script for query cleanup/experiments
-├── generate_sql.py                    # Main SQL generation flow
-├── inspect_vectorstore.py             # Vector store inspection utility
-├── main.py                            # Minimal entry point
-├── query_agent.py                     # Retrieval-based query lookup flow
-├── requirements.txt                   # Project dependencies
-└── README.md                          # Project documentation
+├── agents/
+│   └── sql_agent.py              # RAG agent (retrieval + SQL generation)
+├── queries/
+│   └── examples.json             # Example NL questions and SQL (used for embeddings)
+├── scripts/
+│   ├── create_embeddings_hybrid.py   # Build FAISS index from examples
+│   ├── inspect_vectorstore.py       # Optional: inspect index contents
+│   └── legacy/                        # Older/experimental scripts (not required)
+├── docs/
+│   └── ARCHITECTURE.md           # Architecture overview
+├── main.py                       # CLI entry point (interactive agent)
+├── ui.py                         # Streamlit web interface
+├── requirements.txt
+├── .env.example                  # Template for environment variables
+└── README.md
 ```
 
-## Main Components
+## Prerequisites
 
-### 1. Embedding Layer
-
-The project converts examples into embeddings and stores them in a FAISS vector index for semantic retrieval.
-
-Relevant scripts:
-
-- `create_embedding.py`
-- `create_embedding_from_examples.py`
-
-### 2. Retrieval Layer
-
-The retrieval layer searches the vector store for similar examples based on the user's question.
-
-Relevant component:
-
-- `query_agent.py`
-
-### 3. SQL Generation Layer
-
-The SQL generation flow uses retrieved examples as context for an LLM to generate a new SQL query.
-
-Relevant component:
-
-- `generate_sql.py`
-
-## Example Use Case
-
-User question:
-
-> "What are the tax savings for Texas in 2025?"
-
-Expected behavior:
-
-- retrieve similar examples
-- pass grounded context to the model
-- return a candidate SQL query consistent with known patterns
+- **Python 3.10+**
+- **OpenAI API key** (for embeddings and the LLM)
 
 ## Setup
 
-### 1. Clone the repository
+### 1. Clone and enter the repo
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/mikael-vestri/llm-data-copilot.git
 cd llm-data-copilot
 ```
 
 ### 2. Create and activate a virtual environment
 
-```bash
-# Windows
-python -m venv .venv
-.venv\Scripts\activate
+**Windows (PowerShell):**
 
-# macOS / Linux
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+*(If script execution is disabled, run once: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`.)*
+
+**macOS / Linux:**
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
@@ -107,68 +68,69 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Create a `.env` file
+### 4. Configure environment variables
+
+Copy the example file and add your OpenAI API key:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set:
 
 ```env
-OPENAI_API_KEY=your_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-## How to Run
+**Do not commit `.env`**—it is listed in `.gitignore`.
 
-### Build embeddings from example inputs
+### 5. Build the vector index
+
+The app needs a FAISS index built from the example queries. From the repo root:
 
 ```bash
-python create_embedding_from_examples.py
+python scripts/create_embeddings_hybrid.py
 ```
 
-### Retrieve the closest matching example
+This reads `queries/examples.json` and writes the index under `vectorstore_enhanced/`. Run once (or after changing the examples).
+
+## How to run
+
+### Option A: Command line
 
 ```bash
-python query_agent.py
+python main.py
 ```
 
-### Generate SQL from a natural-language question
+Enter your question when prompted. Type `exit` or `quit` to stop.
+
+### Option B: Web UI (Streamlit)
 
 ```bash
-python generate_sql.py
+streamlit run ui.py
 ```
 
-## Notes for Reviewers
+Open the URL shown in the terminal (e.g. http://localhost:8501) and type your question in the text box.
 
-This repository should be reviewed as an early functional prototype, not as a fully productionized system.
+## Example questions (demo data)
 
-What it already demonstrates well:
+The included `queries/examples.json` uses a generic schema (e.g. `properties`, `clients`, `property_values`). You can try:
 
-- practical LLM application for analytics
-- retrieval-grounded SQL generation
-- business-oriented AI use case
-- awareness of hallucination risk in structured-data tasks
+- *"How many properties do we have per client for the current tax year?"*
+- *"What are the total taxable values and tax amounts by client for 2025?"*
+- *"Which properties have missing tax values for 2025?"*
+- *"Show tax savings by client for 2025."*
+- *"List the top 10 clients by total tax due in 2025."*
 
-## Current Limitations
+## Documentation
 
-This version can be improved in several ways:
+- [Architecture overview](docs/ARCHITECTURE.md) — flow, components, and design choices.
 
-- richer schema documentation in `data_dictionary/`
-- stronger SQL validation
-- better modularization of orchestration logic
-- automated tests
-- more examples in the vector store
-- a clearer interface layer in `app/`
+## Security and privacy
 
-## Recommended Next Improvements
+- **Secrets:** No API keys or secrets are stored in the repo. Use `.env` (from `.env.example`) and keep `.env` out of version control.
+- **Data:** The repo only includes generic demo examples in `queries/examples.json`; no internal or production data is included.
 
-Possible next steps include:
+## License and use
 
-1. Add SQL validation and schema checks
-2. Expand the example library used for retrieval
-3. Separate retrieval, prompt building, and generation into clearer modules
-4. Add tests and logging
-5. Add a lightweight interface for user interaction
-
-## Related Documentation
-
-For additional context, see:
-
-- `cloud.md`
-- `skills.md`
-- `ARCHITECTURE.md`
+This project is a portfolio prototype. You are welcome to clone it, run it with your own API key, and adapt it for learning or evaluation.

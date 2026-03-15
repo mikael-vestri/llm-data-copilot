@@ -43,9 +43,9 @@ def generate_sql_query(user_question: str):
 You are an expert SQL developer working with a PostgreSQL database containing business data about properties, clients, tax calculations, and reporting.
 
 DATABASE CONTEXT:
-- Main tables: nova_property, nova_client, tpt_assessoraccounts, nova_collector_account_number
-- Common fields: tax_year, client_id, property_id, taxable_value, tax_rate
-- Systems: Nova and TPT (two different property management systems)
+- Main tables: properties, clients, property_values (schema for property tax / business analytics)
+- Common fields: tax_year, client_id, property_id, taxable_value, tax_rate, tax_due
+- Use soft-delete filters (e.g. deleted_at IS NULL) when the schema supports it
 
 EXAMPLES FROM SIMILAR QUERIES:
 {examples}

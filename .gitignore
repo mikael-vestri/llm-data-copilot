@@ -46,8 +46,12 @@ logs/
 
 # Local vector indexes / generated artifacts
 vectorstore/
+vectorstore_enhanced/
 *.faiss
 *.pkl
+
+# Legacy / internal-only code (keep locally, do not push)
+old/
 
 # Local databases / temporary files
 *.db
