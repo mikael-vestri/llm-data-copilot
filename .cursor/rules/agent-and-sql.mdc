@@ -1,0 +1,35 @@
+---
+description: "Agent and SQL expectations for LLM Data Copilot — RAG grounding, schema awareness, SQL quality, hallucination mitigation. Use when editing the NL-to-SQL agent or retrieval/generation logic."
+alwaysApply: false
+globs:
+  - "agents/**/*.py"
+  - "scripts/create_embeddings_hybrid.py"
+  - "scripts/inspect_vectorstore.py"
+---
+
+# Agent & SQL expectations
+
+When working on the NL-to-SQL agent or embedding/retrieval scripts in this project:
+
+## Core behavior
+
+- **Grounding first:** Always retrieve similar examples from the vector store before generating SQL. Use retrieved context as required input to the LLM, not optional.
+- **Schema awareness:** Stay consistent with `queries/examples.json` and metadata in the vector index. Do not invent tables, columns, or joins not present in known context.
+- **SQL quality:** Generated SQL should reflect the user request, follow patterns from examples, be valid and readable, and use filters like `deleted_at IS NULL` when the schema supports it.
+- **Hallucination mitigation:** Prefer grounded examples; avoid fabricating schema; stay conservative when context is thin.
+
+## What the agent should support
+
+- Natural-language analytical questions (filters by year/state, grouping, aggregations, joins).
+- Retrieval-grounded reasoning: use FAISS results to shape the prompt.
+- Read-only SQL only; validate before suggesting execution.
+
+## Improvement focus (when reviewing or extending)
+
+1. Grounding quality
+2. SQL reliability
+3. Documentation clarity
+4. Architecture modularity
+5. Portfolio / external-review readiness
+
+For full capability list and reviewer guidance, see `.claude/skills/llm-data-copilot/SKILL.md`.

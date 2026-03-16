@@ -1,0 +1,37 @@
+---
+description: "LLM Data Copilot — project structure, how to run, and conventions. Use when working in this repo."
+alwaysApply: true
+---
+
+# LLM Data Copilot
+
+RAG-based prototype: natural-language questions → SQL. Uses FAISS + LLM; no DB execution.
+
+## Structure
+
+- **agents/sql_agent.py** — RAG agent (retrieval + SQL generation). Loads `vectorstore_enhanced/`.
+- **queries/examples.json** — NL-to-SQL examples; source for embeddings.
+- **scripts/create_embeddings_hybrid.py** — Builds FAISS index. Run from repo root.
+- **scripts/inspect_vectorstore.py** — Optional: inspect index.
+- **scripts/legacy/** — Old/experimental scripts; not required to run.
+- **main.py** — CLI entry point. **ui.py** — Streamlit UI.
+- **docs/ARCHITECTURE.md** — Architecture details.
+
+## Setup (first time, from repo root)
+
+1. `python -m venv .venv` then activate (Windows: `.\.venv\Scripts\Activate.ps1` — if blocked, run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` once).
+2. `pip install -r requirements.txt`
+3. Copy `.env.example` to `.env` and set `OPENAI_API_KEY`.
+4. Build index (once): `python scripts/create_embeddings_hybrid.py`
+
+## Run (repo root, venv active)
+
+- CLI: `python main.py` | Web: `streamlit run ui.py`
+- No database connection or execution; the app only suggests SQL.
+
+## Conventions
+
+- Python 3.10+. No secrets in repo; use `.env` for API key.
+- Demo data only in `queries/examples.json` (schema: properties, clients, property_values).
+- When reviewing: start with README.md, then agents/sql_agent.py, then scripts/create_embeddings_hybrid.py.
+- The files `implementation_plan_ai.md` and `LLM_Data_Copilot_Implementation_Plan.md` describe a future roadmap (DB connection, execution, etc.); the current app does not connect to or execute on a database.

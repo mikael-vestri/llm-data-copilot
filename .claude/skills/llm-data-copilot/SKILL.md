@@ -1,3 +1,8 @@
+---
+name: llm-data-copilot-agent
+description: Use when working on or reviewing the LLM Data Copilot project—agent capabilities, RAG/SQL generation, grounding, schema awareness, and portfolio readiness. Covers expected behavior of the NL-to-SQL agent and improvement goals for the codebase.
+---
+
 # Agent Skills
 
 This document describes the expected capabilities of the LLM Data Copilot agent.
